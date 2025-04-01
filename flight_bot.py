@@ -48,13 +48,13 @@ def get_flight_offers(date):
         if dest_airport not in EU_AIRPORTS:
             continue
         
-        # Time parsing (assumes API returns times - mock if not)
-        out_depart = outbound.get("DepartureDate")  # API may not provide time
-        in_depart = inbound.get("DepartureDate")    # Placeholder - needs time data
+        # Time parsing (mocked - API lacks detailed times here)
+        out_depart = outbound.get("DepartureDate", f"{date_str}T08:00:00Z")  # Mock 8 AM
+        in_depart = inbound.get("DepartureDate", f"{date_str}T15:00:00Z")    # Mock 3 PM
         
-        # Mock times for now (API lacks detailed times in this endpoint)
-        out_arrival = datetime.strptime(out_depart, "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=2)  # Assume 2h flight
-        in_departure = datetime.strptime(in_depart, "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=4)  # Assume later return
+        # Mock times for gap check (API limitation)
+        out_arrival = datetime.strptime(out_depart, "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=2)
+        in_departure = datetime.strptime(in_depart, "%Y-%m-%dT%H:%M:%SZ")
         
         gap = (in_departure - out_arrival).total_seconds() / 3600
         if gap < MIN_GAP:
@@ -65,7 +65,7 @@ def get_flight_offers(date):
             "outbound_departure": out_depart,
             "destination": dest_airport,
             "inbound_departure": in_depart,
-            "price": price
+            "price": price  # Ensure price is always included
         })
     
     return results
