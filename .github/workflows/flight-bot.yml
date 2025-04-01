@@ -1,32 +1,24 @@
 name: Check Cheap Flights
 on:
   schedule:
-    - cron: '0 8 * * 1'  # Every Monday at 8:00 UTC (9:00 CET)
-  workflow_dispatch:  # Manual trigger option
+    - cron: '0 8 * * 1'  # Monday 8:00 UTC
+  workflow_dispatch:
 jobs:
   check-flights:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.9"
-      
-      - name: Install dependencies
-        run: pip install requests
-      
-      - name: Run flight bot
-        env:
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}  # API key from GitHub Secrets
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with: { python-version: "3.9" }
+      - run: pip install requests
+      - env:
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
         run: python flight_bot.py
-      
-      - name: Commit flight offers
+      - run: python generate_html.py
+      - name: Commit and push results
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
-          git add flight_offers.json
-          git commit -m "Update flight offers for $(date +%Y-%m-%d)" || echo "No changes"
+          git add flight_offers.json index.html
+          git commit -m "Update flight offers and HTML for $(date +%Y-%m-%d)" || echo "No changes"
           git push
