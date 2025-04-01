@@ -27,6 +27,8 @@ jobs:
         run: python generate_html.py
       
       - name: Commit and push results
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Explicit token
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
