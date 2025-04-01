@@ -11,8 +11,9 @@ HEADERS = {
 }
 BASE_URL = "https://skyscanner-skyscanner-flight-search-v1.p.rapidapi.com/apiservices/browseroutes/v1.0/DE/EUR/en-DE/"
 
-# EU airport codes (simplified list - expand as needed)
-EU_AIRPORTS = ["AMS", "ARN", "ATH", "BCN", "BRU", "BUD", "CDG", "CPH", "DUB", "FRA", "HEL", "LIS", "LHR", "MAD", "MUC", "OSL", "PRG", "RIX", "SOF", "VIE", "WAW", "ZRH"]
+# Load EU airports from external file
+with open("eu_airports.json", "r") as f:
+    EU_AIRPORTS = set(json.load(f))  # Set for uniqueness and fast lookup
 
 # Conditions
 ORIGIN = "BER"
@@ -48,12 +49,12 @@ def get_flight_offers(date):
         if dest_airport not in EU_AIRPORTS:
             continue
         
-        # Time parsing (mocked - API lacks detailed times here)
+        # Time parsing (mocked - browseroutes lacks detailed times)
         out_depart = outbound.get("DepartureDate", f"{date_str}T08:00:00Z")  # Mock 8 AM
         in_depart = inbound.get("DepartureDate", f"{date_str}T15:00:00Z")    # Mock 3 PM
         
         # Mock times for gap check (API limitation)
-        out_arrival = datetime.strptime(out_depart, "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=2)
+        out_arrival = datetime.strptime(out_depart, "%Y-%m-%dT%H:%M:%SZ") + timedelta(hours=2)  # Assume 2h flight
         in_departure = datetime.strptime(in_depart, "%Y-%m-%dT%H:%M:%SZ")
         
         gap = (in_departure - out_arrival).total_seconds() / 3600
@@ -65,7 +66,7 @@ def get_flight_offers(date):
             "outbound_departure": out_depart,
             "destination": dest_airport,
             "inbound_departure": in_depart,
-            "price": price  # Ensure price is always included
+            "price": price
         })
     
     return results
