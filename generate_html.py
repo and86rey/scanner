@@ -2,8 +2,11 @@ import json
 from datetime import datetime
 
 # Read flight offers from JSON
-with open("flight_offers.json", "r") as f:
-    offers = json.load(f)
+try:
+    with open("flight_offers.json", "r") as f:
+        offers = json.load(f)
+except FileNotFoundError:
+    offers = []  # Fallback if no data yet
 
 # Sort by price (lowest to highest)
 offers.sort(key=lambda x: x["price"])
@@ -17,21 +20,38 @@ html = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cheap Flights from BER</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
         table {
-            width: 80%;
+            width: 90%;
             margin: 20px auto;
             border-collapse: collapse;
-            font-family: Arial, sans-serif;
+            background-color: #fff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 10px;
             text-align: left;
         }
         th {
-            background-color: #f2f2f2;
+            background-color: #4CAF50;
+            color: white;
         }
-        tr:nth-child(even) {background-color: #f9f9f9;}
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
     </style>
 </head>
 <body>
@@ -47,20 +67,23 @@ html = """
 """
 
 # Add rows to table
-for offer in offers:
-    # Parse times (strip 'Z' and seconds for simplicity)
-    out_time = datetime.strptime(offer["outbound_departure"], "%Y-%m-%dT%H:%M:%SZ").strftime("%H:%M")
-    in_time = datetime.strptime(offer["inbound_departure"], "%Y-%m-%dT%H:%M:%SZ").strftime("%H:%M")
-    
-    html += f"""
-        <tr>
-            <td>{offer["date"]}</td>
-            <td>{out_time}</td>
-            <td>{offer["destination"]}</td>
-            <td>{in_time}</td>
-            <td>{offer["price"]}</td>
-        </tr>
-    """
+if not offers:
+    html += "<tr><td colspan='5' style='text-align:center;'>No flights found yet</td></tr>"
+else:
+    for offer in offers:
+        # Parse times (strip seconds and 'Z' for readability)
+        out_time = datetime.strptime(offer["outbound_departure"], "%Y-%m-%dT%H:%M:%SZ").strftime("%H:%M")
+        in_time = datetime.strptime(offer["inbound_departure"], "%Y-%m-%dT%H:%M:%SZ").strftime("%H:%M")
+        
+        html += f"""
+            <tr>
+                <td>{offer["date"]}</td>
+                <td>{out_time}</td>
+                <td>{offer["destination"]}</td>
+                <td>{in_time}</td>
+                <td>{offer["price"]}</td>
+            </tr>
+        """
 
 html += """
     </table>
